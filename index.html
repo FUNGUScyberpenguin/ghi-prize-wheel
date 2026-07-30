@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#0b0c10" />
 <title>GHI at BlackHat &mdash; Prize Wheel</title>
 <link rel="icon" href="./logo.png" />
@@ -24,11 +24,12 @@
   --shadow:0 10px 40px rgba(0,0,0,0.45);
 }
 *{box-sizing:border-box;}
-html,body{height:100%;}
+html,body{height:100%;overscroll-behavior:none;}
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color:var(--text);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
   background:
     radial-gradient(1200px 600px at 50% -10%, rgba(234,123,44,0.10), transparent 60%),
     radial-gradient(900px 500px at 90% 110%, rgba(55,182,255,0.08), transparent 55%),
@@ -48,90 +49,72 @@ body::before{
 .page{max-width:720px;margin:0 auto;position:relative;z-index:1;}
 
 .header{display:flex;align-items:center;gap:18px;margin-bottom:24px;justify-content:center;}
-.header img{
-  width:64px;height:64px;border-radius:50%;flex-shrink:0;
-  box-shadow:0 0 0 2px rgba(234,123,44,0.5), 0 0 26px rgba(234,123,44,0.35);
-}
-.eyebrow{
-  font-family:ui-monospace,"Cascadia Code","Courier New",monospace;
-  font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 3px;
-}
+.header img{width:64px;height:64px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 0 2px rgba(234,123,44,0.5), 0 0 26px rgba(234,123,44,0.35);}
+.eyebrow{font-family:ui-monospace,"Cascadia Code","Courier New",monospace;
+  font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 3px;}
 .header h1{font-size:26px;font-weight:800;margin:0;letter-spacing:-.01em;}
 .header h1 .ghi{color:var(--orange);}
 
-.card{
-  position:relative;
+.card{position:relative;
   background:linear-gradient(180deg, var(--panel), var(--bg-2));
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:34px 30px 30px;
-  display:flex;flex-direction:column;align-items:center;
-  box-shadow:var(--shadow);
-}
-.card::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:3px;border-radius:18px 18px 0 0;
-  background:linear-gradient(90deg, var(--orange), var(--cyan));opacity:.9;
-}
+  border:1px solid var(--border);border-radius:18px;padding:34px 30px 30px;
+  display:flex;flex-direction:column;align-items:center;box-shadow:var(--shadow);}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;border-radius:18px 18px 0 0;
+  background:linear-gradient(90deg, var(--orange), var(--cyan));opacity:.9;}
 
 #wheelWrap{position:relative;width:400px;height:400px;transition:width .25s ease, height .25s ease;
-  filter:drop-shadow(0 14px 30px rgba(0,0,0,0.55));}
-#wheelCanvas{width:400px;height:400px;display:block;transform:rotate(0deg);border-radius:50%;}
-#pointer{
-  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  filter:drop-shadow(0 14px 30px rgba(0,0,0,0.55));cursor:pointer;touch-action:manipulation;}
+#wheelCanvas{width:400px;height:400px;display:block;transform:rotate(0deg);border-radius:50%;pointer-events:none;}
+#pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);
   width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;
-  border-top:28px solid var(--orange);z-index:3;
-  filter:drop-shadow(0 3px 4px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(234,123,44,0.55));
-}
-#hub{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  border-top:28px solid var(--orange);z-index:3;pointer-events:none;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(234,123,44,0.55));}
+#hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   width:100px;height:100px;border-radius:50%;overflow:hidden;
   border:3px solid #0b0c10;box-sizing:border-box;z-index:2;background:#000;
   box-shadow:0 0 0 3px rgba(234,123,44,0.85), 0 0 22px rgba(234,123,44,0.5), 0 3px 10px rgba(0,0,0,0.6);
-  cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;
-}
-#hub:hover{transform:translate(-50%,-50%) scale(1.06);box-shadow:0 0 0 3px var(--orange), 0 0 34px rgba(234,123,44,0.75), 0 3px 12px rgba(0,0,0,0.6);}
-#hub:active{transform:translate(-50%,-50%) scale(0.95);}
-#hub:focus-visible{outline:3px solid var(--cyan);outline-offset:4px;}
-#hub.spinning{cursor:default;}
-#hub.spinning:hover{transform:translate(-50%,-50%);}
+  transition:transform .15s ease, box-shadow .15s ease;pointer-events:none;}
 #hub img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+#wheelWrap:not(.spinning):hover #hub{transform:translate(-50%,-50%) scale(1.05);}
+#wheelWrap:focus-visible{outline:3px solid var(--cyan);outline-offset:6px;border-radius:50%;}
+
+/* attract pulse when idle */
+#wheelWrap.attract{animation:attract 1.7s ease-in-out infinite;}
+@keyframes attract{0%,100%{filter:drop-shadow(0 14px 30px rgba(0,0,0,0.55));}
+  50%{filter:drop-shadow(0 0 34px rgba(234,123,44,0.65)) drop-shadow(0 14px 30px rgba(0,0,0,0.55));}}
 
 .tap-hint{font-family:ui-monospace,"Cascadia Code",monospace;font-size:11px;letter-spacing:.08em;
   color:var(--text-muted);margin:16px 0 0;text-align:center;text-transform:uppercase;}
 
-.spin-btn{
-  margin-top:18px;padding:15px 44px;font-size:16px;font-weight:700;letter-spacing:.04em;
-  color:#1a1205;border:none;border-radius:999px;cursor:pointer;
+.spin-btn{margin-top:18px;padding:15px 44px;font-size:16px;font-weight:700;letter-spacing:.04em;
+  color:#1a1205;border:none;border-radius:999px;cursor:pointer;touch-action:manipulation;
   background:linear-gradient(180deg, var(--orange-soft), var(--orange));
   box-shadow:0 6px 18px rgba(234,123,44,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
-  transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;
-}
+  transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;}
 .spin-btn:hover{filter:brightness(1.06);box-shadow:0 8px 26px rgba(234,123,44,0.55), inset 0 1px 0 rgba(255,255,255,0.3);}
 .spin-btn:active{transform:scale(0.97);}
 .spin-btn:disabled{opacity:.55;cursor:default;filter:grayscale(.2);box-shadow:none;}
 
 #winnerBox{margin-top:20px;min-height:34px;text-align:center;}
-.winner-pill{
-  display:inline-flex;align-items:center;gap:9px;
+.winner-pill{display:inline-flex;align-items:center;gap:9px;
   background:linear-gradient(180deg, rgba(234,123,44,0.18), rgba(234,123,44,0.10));
-  border:1px solid rgba(234,123,44,0.6);
-  color:var(--orange-soft);border-radius:999px;padding:12px 24px;font-size:19px;font-weight:800;
-  box-shadow:0 0 22px rgba(234,123,44,0.28);
-  animation:pop .35s cubic-bezier(.2,1.3,.4,1);
-}
+  border:1px solid rgba(234,123,44,0.6);color:var(--orange-soft);border-radius:999px;
+  padding:12px 24px;font-size:19px;font-weight:800;box-shadow:0 0 22px rgba(234,123,44,0.28);
+  animation:pop .35s cubic-bezier(.2,1.3,.4,1);}
 .winner-pill .who{color:#fff;}
 .winner-note{font-size:13px;color:var(--text-2);margin:0;}
 @keyframes pop{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
 
 .actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;justify-content:center;}
-.btn{
-  font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:999px;cursor:pointer;
-  border:1px solid var(--border);background:var(--panel-2);color:var(--text);
-  transition:all .15s ease;display:inline-flex;align-items:center;gap:8px;
-}
+.btn{font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--border);background:var(--panel-2);color:var(--text);touch-action:manipulation;
+  transition:all .15s ease;display:inline-flex;align-items:center;gap:8px;}
 .btn:hover{background:#232936;border-color:#39404e;}
 .btn.primary{border-color:rgba(55,182,255,0.5);background:rgba(55,182,255,0.10);color:#bfe3ff;}
 .btn.primary:hover{background:rgba(55,182,255,0.18);}
+.btn.go{border-color:rgba(234,123,44,0.55);background:rgba(234,123,44,0.12);color:var(--orange-soft);}
+.btn.go:hover{background:rgba(234,123,44,0.2);}
 .pill-count{font-variant-numeric:tabular-nums;color:var(--text-2);font-size:12px;
   background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:2px 8px;margin-left:2px;}
 
@@ -139,22 +122,66 @@ body::before{
   font-family:ui-monospace,"Cascadia Code",monospace;letter-spacing:.03em;}
 .footer .dot{color:var(--orange);}
 
-#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:100;}
 
-/* ---------- MODAL ---------- */
+/* ---------------- BOOTH (kiosk) MODE ---------------- */
+body.booth{padding:0;overflow:hidden;}
+body.booth .header,body.booth .footer,body.booth .actions,body.booth .tap-hint{display:none;}
+body.booth .page{max-width:none;height:100vh;display:flex;align-items:center;justify-content:center;}
+body.booth .card{background:transparent;border:none;box-shadow:none;padding:0;justify-content:center;height:100%;}
+body.booth .card::before{display:none;}
+body.booth #winnerBox{display:none;}
+body.booth .spin-btn{margin-top:26px;padding:20px 64px;font-size:22px;}
+#boothHint{display:none;}
+body.booth #boothHint{display:block;font-family:ui-monospace,"Cascadia Code",monospace;
+  font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange-soft);
+  margin:22px 0 0;text-align:center;opacity:.9;animation:blink 2.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:.45;}50%{opacity:1;}}
+
+/* hidden long-press lock corner, only in booth */
+#lockCorner{display:none;}
+body.booth #lockCorner{display:flex;position:fixed;top:0;left:0;width:96px;height:96px;z-index:82;
+  align-items:flex-start;justify-content:flex-start;padding:14px;color:var(--text-muted);
+  opacity:.28;font-size:20px;cursor:pointer;touch-action:manipulation;}
+body.booth #lockCorner:hover{opacity:.6;}
+
+/* winner takeover */
+#winnerOverlay[hidden]{display:none;}
+#winnerOverlay{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:24px;
+  background:radial-gradient(circle at 50% 40%, rgba(20,12,4,0.94), rgba(4,5,8,0.97));
+  animation:fade .2s ease;}
+#winnerOverlay .crown{font-size:clamp(46px,9vw,90px);line-height:1;margin-bottom:6px;}
+#winnerOverlay .lead{font-family:ui-monospace,"Cascadia Code",monospace;font-size:clamp(14px,2.4vw,22px);
+  letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);margin:0 0 10px;}
+#winnerOverlay .name{font-size:clamp(40px,8vw,104px);font-weight:900;line-height:1.02;
+  color:#fff;margin:0 0 6px;max-width:92vw;
+  text-shadow:0 0 30px rgba(234,123,44,0.5);animation:pop .4s cubic-bezier(.2,1.3,.4,1);}
+#winnerOverlay .sub{color:var(--orange-soft);font-size:clamp(13px,1.8vw,18px);margin:0 0 34px;font-weight:700;}
+#nextBtn{padding:20px 60px;font-size:clamp(18px,2.6vw,26px);font-weight:800;letter-spacing:.03em;
+  color:#1a1205;border:none;border-radius:999px;cursor:pointer;touch-action:manipulation;
+  background:linear-gradient(180deg, var(--orange-soft), var(--orange));
+  box-shadow:0 8px 30px rgba(234,123,44,0.5);transition:transform .1s ease, filter .15s ease;}
+#nextBtn:hover{filter:brightness(1.06);}
+#nextBtn:active{transform:scale(0.97);}
+
+/* ---------------- MODALS ---------------- */
 .modal[hidden]{display:none;}
 .modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal-backdrop{position:absolute;inset:0;background:rgba(4,5,8,0.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:fade .18s ease;}
-.modal-panel{
-  position:relative;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;
+#pinModal{z-index:90;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(4,5,8,0.72);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:fade .18s ease;}
+.modal-panel{position:relative;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;
   background:linear-gradient(180deg, var(--panel), var(--bg-2));
   border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.6);
-  overflow:hidden;animation:rise .22s cubic-bezier(.2,.9,.3,1);
-}
+  overflow:hidden;animation:rise .22s cubic-bezier(.2,.9,.3,1);}
+.modal-panel.pin{max-width:340px;}
 .modal-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
   background:linear-gradient(90deg, var(--orange), var(--cyan));}
 @keyframes fade{from{opacity:0;}to{opacity:1;}}
 @keyframes rise{from{transform:translateY(16px) scale(.98);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes shake{10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(4px);}
+  30%,50%,70%{transform:translateX(-7px);}40%,60%{transform:translateX(7px);}}
 
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;}
 .modal-head h2{margin:0;font-size:16px;font-weight:700;}
@@ -167,6 +194,7 @@ body::before{
 
 .add-row{display:flex;gap:8px;margin-bottom:14px;}
 #addInput{flex:1;padding:12px 13px;font-size:14px;font-family:inherit;color:var(--text);
+  -webkit-user-select:text;user-select:text;
   background:var(--panel-2);border:1px solid var(--border);border-radius:10px;}
 #addInput::placeholder{color:var(--text-muted);}
 #addInput:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
@@ -183,23 +211,30 @@ body::before{
 .chip .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
 .chip .name{flex:1;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .chip .stepper{display:flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:8px;}
-.chip .stepper button{width:26px;height:26px;border:none;background:transparent;color:var(--text-2);
-  font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}
+.chip .stepper button{width:28px;height:28px;border:none;background:transparent;color:var(--text-2);
+  font-size:16px;line-height:1;cursor:pointer;border-radius:6px;touch-action:manipulation;}
 .chip .stepper button:hover{background:#2a303c;color:var(--text);}
 .chip .stepper .qty{min-width:22px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text);}
-.chip .remove{width:28px;height:28px;border:none;background:transparent;color:var(--text-muted);
-  font-size:17px;line-height:1;cursor:pointer;border-radius:8px;flex-shrink:0;}
+.chip .remove{width:30px;height:30px;border:none;background:transparent;color:var(--text-muted);
+  font-size:17px;line-height:1;cursor:pointer;border-radius:8px;flex-shrink:0;touch-action:manipulation;}
 .chip .remove:hover{background:rgba(226,72,74,0.16);color:#ff6b6c;}
 
 .toolbar{display:flex;gap:8px;margin:16px 0 12px;flex-wrap:wrap;}
 .toolbar button{font-size:12.5px;padding:8px 14px;border:1px solid var(--border);border-radius:9px;
-  background:var(--panel-2);color:var(--text-2);cursor:pointer;transition:all .15s ease;}
+  background:var(--panel-2);color:var(--text-2);cursor:pointer;transition:all .15s ease;touch-action:manipulation;}
 .toolbar button:hover{background:#232936;color:var(--text);border-color:#39404e;}
 .count-row{font-size:13px;color:var(--text-2);}
 .count-row b{color:var(--text);font-variant-numeric:tabular-nums;}
 
-.checkrow{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:13px;color:var(--text-2);cursor:pointer;user-select:none;}
+.checkrow{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:13px;color:var(--text-2);cursor:pointer;}
 .checkrow input{accent-color:var(--orange);width:16px;height:16px;cursor:pointer;}
+
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--border-soft);font-size:13px;color:var(--text-2);}
+.setting-row input{width:96px;padding:9px 11px;font-size:14px;font-family:ui-monospace,monospace;letter-spacing:.15em;
+  text-align:center;color:var(--text);-webkit-user-select:text;user-select:text;
+  background:var(--panel-2);border:1px solid var(--border);border-radius:9px;}
+.setting-row input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
 
 details.adv{margin-top:14px;border-top:1px solid var(--border-soft);padding-top:12px;}
 details.adv summary{font-size:12.5px;color:var(--text-muted);cursor:pointer;list-style:none;}
@@ -207,16 +242,25 @@ details.adv summary::-webkit-details-marker{display:none;}
 details.adv summary::before{content:"\25B8 ";color:var(--cyan);}
 details.adv[open] summary::before{content:"\25BE ";}
 #itemsText{width:100%;margin-top:10px;min-height:130px;padding:12px;font-size:13px;line-height:1.65;
-  border:1px solid var(--border);border-radius:10px;resize:vertical;
+  border:1px solid var(--border);border-radius:10px;resize:vertical;-webkit-user-select:text;user-select:text;
   font-family:ui-monospace,"Cascadia Code","Courier New",monospace;color:var(--text);background:var(--bg);}
 #itemsText:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
 .hint{font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6;}
 
-.modal-foot{padding:14px 22px 20px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;}
-#doneBtn{padding:11px 26px;font-size:14px;font-weight:700;color:#1a1205;border:none;border-radius:999px;cursor:pointer;
+.modal-foot{padding:14px 22px 20px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:10px;}
+.modal-foot .ghost{background:var(--panel-2);color:var(--text-2);border:1px solid var(--border);
+  padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;}
+.modal-foot .ghost:hover{background:#232936;color:var(--text);}
+#doneBtn,#pinSubmit{padding:11px 26px;font-size:14px;font-weight:700;color:#1a1205;border:none;border-radius:999px;cursor:pointer;
   background:linear-gradient(180deg, var(--orange-soft), var(--orange));transition:filter .15s ease, transform .1s ease;}
-#doneBtn:hover{filter:brightness(1.06);}
-#doneBtn:active{transform:scale(0.97);}
+#doneBtn:hover,#pinSubmit:hover{filter:brightness(1.06);}
+#doneBtn:active,#pinSubmit:active{transform:scale(0.97);}
+
+#pinInput{width:100%;padding:14px;font-size:26px;letter-spacing:.5em;text-align:center;
+  font-family:ui-monospace,monospace;color:var(--text);-webkit-user-select:text;user-select:text;
+  background:var(--panel-2);border:1px solid var(--border);border-radius:12px;}
+#pinInput:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
+.pin-err{color:#ff6b6c;font-size:12.5px;margin:8px 0 0;min-height:16px;text-align:center;}
 
 body.modal-open{overflow:hidden;}
 
@@ -228,6 +272,8 @@ body.modal-open{overflow:hidden;}
 </head>
 <body>
 <canvas id="confetti"></canvas>
+<div id="lockCorner" role="button" aria-label="Operator menu (hold)" title="Hold to unlock">🔒</div>
+
 <div class="page">
   <div class="header">
     <img src="./logo.png" alt="GHI logo" />
@@ -238,27 +284,35 @@ body.modal-open{overflow:hidden;}
   </div>
 
   <div class="card" id="card">
-    <div id="wheelWrap">
+    <div id="wheelWrap" tabindex="0" role="button" aria-label="Spin the wheel">
       <canvas id="wheelCanvas" width="400" height="400"></canvas>
       <div id="pointer"></div>
-      <div id="hub" tabindex="0" role="button" aria-label="Spin the wheel">
-        <img src="./logo.png" alt="" />
-      </div>
+      <div id="hub"><img src="./logo.png" alt="" /></div>
     </div>
-    <p class="tap-hint">Tap the logo or the button to spin</p>
+    <p class="tap-hint">Tap the wheel or the button to spin</p>
+    <p id="boothHint">👆 Tap the wheel to spin</p>
     <button id="spinBtn" class="spin-btn">SPIN THE WHEEL</button>
     <div id="winnerBox"></div>
 
     <div class="actions">
       <button id="editBtn" class="btn primary" type="button">✎ Edit prizes <span class="pill-count" id="countPill">0</span></button>
-      <button id="presentToggle" class="btn" type="button">⛶ Enlarge wheel</button>
+      <button id="boothBtn" class="btn go" type="button">▶ Booth mode</button>
     </div>
   </div>
 
   <div class="footer">GHI at BlackHat <span class="dot">&bull;</span> runs entirely in your browser <span class="dot">&bull;</span> nothing is uploaded</div>
 </div>
 
-<!-- Prize manager modal -->
+<!-- winner takeover (booth mode) -->
+<div id="winnerOverlay" hidden>
+  <div class="crown">🎉</div>
+  <p class="lead">Winner</p>
+  <p class="name" id="winnerName">—</p>
+  <p class="sub">Congratulations!</p>
+  <button id="nextBtn" type="button">Next spin →</button>
+</div>
+
+<!-- prize manager modal -->
 <div id="modal" class="modal" hidden>
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -283,6 +337,10 @@ body.modal-open{overflow:hidden;}
       </div>
       <div class="count-row">Total slices: <b id="countLabel">0</b></div>
       <label class="checkrow"><input type="checkbox" id="removeAfterWin" /> Remove the winner from the wheel after each spin</label>
+      <div class="setting-row">
+        <span>Booth exit PIN</span>
+        <input id="pinSetting" type="text" inputmode="numeric" maxlength="8" autocomplete="off" spellcheck="false" />
+      </div>
       <details class="adv">
         <summary>Advanced: edit as text</summary>
         <textarea id="itemsText" spellcheck="false"></textarea>
@@ -296,6 +354,22 @@ body.modal-open{overflow:hidden;}
   </div>
 </div>
 
+<!-- PIN prompt (exit booth mode) -->
+<div id="pinModal" class="modal" hidden>
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel pin" role="dialog" aria-modal="true" aria-label="Enter PIN">
+    <div class="modal-head"><div><p class="sub">Operator</p><h2>Enter PIN to exit</h2></div></div>
+    <div class="modal-body">
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" />
+      <p class="pin-err" id="pinErr"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="ghost" id="pinCancel" type="button">Cancel</button>
+      <button id="pinSubmit" type="button">Unlock</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 var canvas=document.getElementById('wheelCanvas');
@@ -303,8 +377,7 @@ var ctx=canvas.getContext('2d');
 var wheelWrap=document.getElementById('wheelWrap');
 var hub=document.getElementById('hub');
 var pointer=document.getElementById('pointer');
-var presentToggle=document.getElementById('presentToggle');
-var card=document.getElementById('card');
+var boothBtn=document.getElementById('boothBtn');
 var itemsText=document.getElementById('itemsText');
 var chipList=document.getElementById('chipList');
 var addInput=document.getElementById('addInput');
@@ -315,14 +388,20 @@ var winnerBox=document.getElementById('winnerBox');
 var removeAfterWin=document.getElementById('removeAfterWin');
 var modal=document.getElementById('modal');
 var editBtn=document.getElementById('editBtn');
+var winnerOverlay=document.getElementById('winnerOverlay');
+var winnerName=document.getElementById('winnerName');
+var lockCorner=document.getElementById('lockCorner');
 
 var NORMAL_SIZE=400;
-var presentMode=false;
+var boothMode=false;
 var size=NORMAL_SIZE,cx=size/2,cy=size/2,radius=size/2-10;
 var colors=['#F2A03D','#5FB030','#7C6FE8','#E8484A','#E86A2E','#33A1E8','#E85C88'];
 var currentRotation=0;
 var spinning=false;
 var STORE_KEY='ghi-wheel-items';
+var PIN_KEY='ghi-wheel-pin';
+var DEFAULT_PIN='1337';
+var wakeLock=null;
 
 var DEFAULTS=[
   '1 Year Cert Tracker','1 Year Cert Tracker','1 Year Cert Tracker',
@@ -333,14 +412,12 @@ var DEFAULTS=[
   'Candy','Candy','Candy',
   'Sticker','Sticker','GHI pin'
 ];
-
 var items=load();
 
-function load(){
-  try{var raw=localStorage.getItem(STORE_KEY);if(raw){var arr=JSON.parse(raw);if(Array.isArray(arr))return arr;}}catch(e){}
-  return DEFAULTS.slice();
-}
+function load(){try{var raw=localStorage.getItem(STORE_KEY);if(raw){var arr=JSON.parse(raw);if(Array.isArray(arr))return arr;}}catch(e){}return DEFAULTS.slice();}
 function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(items));}catch(e){}}
+function getPin(){try{return localStorage.getItem(PIN_KEY)||DEFAULT_PIN;}catch(e){return DEFAULT_PIN;}}
+function setPin(v){try{localStorage.setItem(PIN_KEY,v);}catch(e){}}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function groupItems(){
@@ -349,25 +426,18 @@ function groupItems(){
   var out=[];for(var j=0;j<order.length;j++){out.push({label:order[j],count:map[order[j]]});}
   return out;
 }
-
 function setItems(next, fromTextarea){
   items=next;save();renderChips();
   if(!fromTextarea){itemsText.value=items.join('\n');}
   drawWheel();
 }
-
 function renderChips(){
   var groups=groupItems();
-  countLabel.textContent=items.length;
-  countPill.textContent=items.length;
-  chipList.innerHTML='';
-  var slice=0;
+  countLabel.textContent=items.length;countPill.textContent=items.length;
+  chipList.innerHTML='';var slice=0;
   for(var g=0;g<groups.length;g++){
-    var grp=groups[g];
-    var color=colors[slice%colors.length];
-    slice+=grp.count;
-    var chip=document.createElement('div');
-    chip.className='chip';
+    var grp=groups[g];var color=colors[slice%colors.length];slice+=grp.count;
+    var chip=document.createElement('div');chip.className='chip';
     chip.innerHTML=
       '<span class="swatch" style="background:'+color+'"></span>'+
       '<span class="name" title="'+esc(grp.label)+'">'+esc(grp.label)+'</span>'+
@@ -385,32 +455,26 @@ function renderChips(){
     chipList.appendChild(chip);
   }
 }
-
 function addOne(label){var next=items.slice();next.push(label);setItems(next,false);}
 function removeOne(label){var next=items.slice();var idx=next.indexOf(label);if(idx>-1)next.splice(idx,1);setItems(next,false);}
 function removeAll(label){var next=items.filter(function(x){return x!==label;});setItems(next,false);}
 
 function drawWheel(){
-  var n=items.length;
-  ctx.clearRect(0,0,size,size);
+  var n=items.length;ctx.clearRect(0,0,size,size);
   ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius+3,0,Math.PI*2);ctx.fillStyle='#0b0c10';ctx.fill();ctx.restore();
-
   if(n===0){
     ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fillStyle='#1b1f28';ctx.fill();
     ctx.fillStyle='#6b7280';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 15px Arial, sans-serif';
     ctx.fillText('Add prizes to spin',cx,cy);ctx.restore();drawRing();return;
   }
-
   var segAngle=(Math.PI*2)/n;
   for(var i=0;i<n;i++){
     var start=-Math.PI/2+i*segAngle;var end=start+segAngle;
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,start,end);ctx.closePath();
     ctx.fillStyle=colors[i%colors.length];ctx.fill();
     ctx.strokeStyle='rgba(11,12,16,0.85)';ctx.lineWidth=2;ctx.stroke();
-    ctx.save();
-    var mid=start+segAngle/2;ctx.translate(cx,cy);ctx.rotate(mid);
-    var label=items[i];
-    var maxChars=Math.max(6,Math.floor(20-n*0.15));
+    ctx.save();var mid=start+segAngle/2;ctx.translate(cx,cy);ctx.rotate(mid);
+    var label=items[i];var maxChars=Math.max(6,Math.floor(20-n*0.15));
     if(label.length>maxChars){label=label.slice(0,maxChars-1)+'…';}
     var fontPx=Math.max(11,Math.round(13*(size/NORMAL_SIZE)));
     ctx.font='700 '+fontPx+'px Arial, sans-serif';ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,0.45)';
@@ -430,8 +494,8 @@ function drawRing(){
 }
 
 function computeSize(){
-  if(!presentMode)return Math.min(NORMAL_SIZE, window.innerWidth-72);
-  var available=Math.min(window.innerWidth-64, window.innerHeight-240, 720);
+  if(!boothMode)return Math.min(NORMAL_SIZE, window.innerWidth-72);
+  var available=Math.min(window.innerWidth-40, window.innerHeight-180, 900);
   return Math.max(380, Math.round(available));
 }
 function applyLayout(){
@@ -445,22 +509,22 @@ function applyLayout(){
   pointer.style.borderTopWidth=Math.round(28*scale)+'px';
 }
 
-/* ---- modal ---- */
-function openModal(){
-  modal.hidden=false;document.body.classList.add('modal-open');
-  setTimeout(function(){addInput.focus();},60);
+/* ---- edit modal ---- */
+function openModal(){modal.hidden=false;document.body.classList.add('modal-open');document.getElementById('pinSetting').value=getPin();setTimeout(function(){addInput.focus();},60);}
+function closeModal(){
+  var pv=document.getElementById('pinSetting').value.trim();
+  if(pv)setPin(pv);
+  modal.hidden=true;document.body.classList.remove('modal-open');
 }
-function closeModal(){modal.hidden=true;document.body.classList.remove('modal-open');editBtn.focus();}
 editBtn.addEventListener('click',openModal);
 modal.addEventListener('click',function(e){if(e.target.hasAttribute('data-close'))closeModal();});
 document.getElementById('doneBtn').addEventListener('click',closeModal);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)closeModal();});
 
-/* ---- add / edit ---- */
+/* ---- add / edit list ---- */
 addInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();commitAdd();}});
 document.getElementById('addBtn').addEventListener('click',commitAdd);
 function commitAdd(){var v=addInput.value.trim();if(!v)return;addOne(v);addInput.value='';addInput.focus();}
-
 var textareaTimer=null;
 itemsText.addEventListener('input',function(){
   if(textareaTimer)clearTimeout(textareaTimer);
@@ -481,11 +545,13 @@ document.getElementById('resetBtn').addEventListener('click',function(){winnerBo
 /* ---- spin ---- */
 function spinWheel(){
   if(spinning)return;
+  if(!winnerOverlay.hidden)return;
   if(items.length<2){
-    winnerBox.innerHTML='<p class="winner-note">Add at least two prizes to spin.</p>';
+    if(!boothMode)winnerBox.innerHTML='<p class="winner-note">Add at least two prizes to spin.</p>';
     return;
   }
-  spinning=true;spinBtn.disabled=true;hub.classList.add('spinning');winnerBox.innerHTML='';
+  cancelAttract();
+  spinning=true;spinBtn.disabled=true;wheelWrap.classList.add('spinning');winnerBox.innerHTML='';
   var n=items.length;var segAngle=360/n;
   var extra=360*(5+Math.floor(Math.random()*3))+Math.random()*360;
   var newRotation=currentRotation+extra;
@@ -496,21 +562,80 @@ function spinWheel(){
     var shifted=((360-(currentRotation%360))%360+360)%360;
     var winIndex=Math.floor(shifted/segAngle)%n;
     var winner=items[winIndex];
-    winnerBox.innerHTML='<div class="winner-pill">🎉 <span class="who">'+esc(winner)+'</span></div>';
+    spinning=false;spinBtn.disabled=false;wheelWrap.classList.remove('spinning');
     burstConfetti();
-    spinning=false;spinBtn.disabled=false;hub.classList.remove('spinning');
-    if(removeAfterWin.checked){setTimeout(function(){removeOne(winner);},450);}
+    if(boothMode){
+      winnerName.textContent=winner;
+      winnerOverlay.hidden=false;
+    }else{
+      winnerBox.innerHTML='<div class="winner-pill">🎉 <span class="who">'+esc(winner)+'</span></div>';
+    }
+    if(removeAfterWin.checked){setTimeout(function(){removeOne(winner);},boothMode?0:450);}
+    if(boothMode)scheduleAttract();
   },4300);
 }
-spinBtn.addEventListener('click',spinWheel);
-hub.addEventListener('click',spinWheel);
-hub.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();spinWheel();}});
+wheelWrap.addEventListener('click',spinWheel);
+wheelWrap.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();spinWheel();}});
+spinBtn.addEventListener('click',function(e){e.stopPropagation();spinWheel();});
 
-presentToggle.addEventListener('click',function(){
-  presentMode=!presentMode;
-  presentToggle.textContent=presentMode?'⤢ Shrink wheel':'⛶ Enlarge wheel';
+/* winner overlay dismiss */
+document.getElementById('nextBtn').addEventListener('click',function(e){e.stopPropagation();hideWinner();});
+winnerOverlay.addEventListener('click',function(e){if(e.target===winnerOverlay)hideWinner();});
+function hideWinner(){winnerOverlay.hidden=true;scheduleAttract();}
+
+/* ---- booth / kiosk mode ---- */
+boothBtn.addEventListener('click',enterBooth);
+function enterBooth(){
+  boothMode=true;document.body.classList.add('booth');
+  requestFs();requestWake();
+  applyLayout();drawWheel();scheduleAttract();
+}
+function exitBooth(){
+  boothMode=false;document.body.classList.remove('booth');
+  winnerOverlay.hidden=true;cancelAttract();releaseWake();exitFs();
   applyLayout();drawWheel();
-});
+}
+function requestFs(){var el=document.documentElement;var r=el.requestFullscreen||el.webkitRequestFullscreen;if(r){try{r.call(el);}catch(e){}}}
+function exitFs(){if(document.fullscreenElement||document.webkitFullscreenElement){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}}
+
+/* wake lock */
+function requestWake(){
+  if(!('wakeLock'in navigator))return;
+  navigator.wakeLock.request('screen').then(function(l){wakeLock=l;wakeLock.addEventListener('release',function(){wakeLock=null;});}).catch(function(){});
+}
+function releaseWake(){if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&boothMode)requestWake();});
+
+/* ---- attract (idle) ---- */
+var attractTimer=null;
+function scheduleAttract(){
+  cancelAttract();
+  if(!boothMode)return;
+  attractTimer=setTimeout(function(){if(boothMode&&!spinning&&winnerOverlay.hidden)wheelWrap.classList.add('attract');},12000);
+}
+function cancelAttract(){if(attractTimer){clearTimeout(attractTimer);attractTimer=null;}wheelWrap.classList.remove('attract');}
+document.addEventListener('pointerdown',function(){if(boothMode){cancelAttract();scheduleAttract();}},true);
+
+/* ---- operator lock: hold corner -> PIN ---- */
+var holdTimer=null;
+lockCorner.addEventListener('pointerdown',function(e){e.preventDefault();holdTimer=setTimeout(openPin,900);});
+['pointerup','pointerleave','pointercancel'].forEach(function(ev){lockCorner.addEventListener(ev,function(){if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}});});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&boothMode&&pinModal.hidden)exitBooth();});
+
+var pinModal=document.getElementById('pinModal');
+var pinInput=document.getElementById('pinInput');
+var pinErr=document.getElementById('pinErr');
+function openPin(){pinModal.hidden=false;pinErr.textContent='';pinInput.value='';setTimeout(function(){pinInput.focus();},60);}
+function closePin(){pinModal.hidden=true;}
+document.getElementById('pinCancel').addEventListener('click',closePin);
+document.getElementById('pinSubmit').addEventListener('click',trySubmitPin);
+pinInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();trySubmitPin();}});
+function trySubmitPin(){
+  if(pinInput.value===getPin()){closePin();exitBooth();}
+  else{pinErr.textContent='Incorrect PIN';pinInput.value='';pinModal.querySelector('.modal-panel').style.animation='shake .4s';setTimeout(function(){pinModal.querySelector('.modal-panel').style.animation='';},400);}
+}
+
+document.addEventListener('contextmenu',function(e){if(boothMode)e.preventDefault();});
 window.addEventListener('resize',function(){sizeConfetti();applyLayout();drawWheel();});
 
 /* ---- confetti ---- */
@@ -519,12 +644,13 @@ var cctx=cc.getContext('2d');
 var parts=[],raf=null;
 function sizeConfetti(){var dpr=window.devicePixelRatio||1;cc.width=window.innerWidth*dpr;cc.height=window.innerHeight*dpr;cctx.setTransform(dpr,0,0,dpr,0,0);}
 function burstConfetti(){
-  var W=window.innerWidth;var originX=W/2,originY=window.innerHeight*0.30;
-  for(var i=0;i<150;i++){
-    var a=Math.random()*Math.PI*2;var sp=4+Math.random()*7;
-    parts.push({x:originX+(Math.random()-0.5)*140,y:originY,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,
-      g:0.14+Math.random()*0.1,s:5+Math.random()*6,rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.35,
-      col:colors[Math.floor(Math.random()*colors.length)],life:0,max:120+Math.random()*40});
+  var W=window.innerWidth;var originX=W/2,originY=window.innerHeight*(boothMode?0.4:0.30);
+  var count=boothMode?220:150;
+  for(var i=0;i<count;i++){
+    var a=Math.random()*Math.PI*2;var sp=4+Math.random()*8;
+    parts.push({x:originX+(Math.random()-0.5)*160,y:originY,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-5,
+      g:0.14+Math.random()*0.1,s:5+Math.random()*7,rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.35,
+      col:colors[Math.floor(Math.random()*colors.length)],life:0,max:130+Math.random()*50});
   }
   if(!raf)raf=requestAnimationFrame(tick);
 }
