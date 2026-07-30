@@ -23,7 +23,9 @@ Tap **Booth mode** to run it guest-facing on a touchscreen:
 - **Tap the wheel to spin** — the whole wheel is one big touch target.
 - **Winner takeover** — a full-screen "🎉 WINNER: _prize_" readable across the aisle, with a **Next spin** button.
 - **Attract mode** — the wheel pulses "Tap to spin" when idle to pull people over.
-- **Operator lock** — guests can't reach the prize list. To exit, **press-and-hold the 🔒 in the top-left corner** (about a second) and enter the PIN.
+- **Two ways to exit** (both need a deliberate ~1-second hold so a guest can't bump them):
+  - **Hold the ✕ in the top-right corner** — exits straight back to normal mode (a red ring fills as you hold).
+  - **Hold the 🔒 in the top-left corner** — opens an on-screen number pad; enter the PIN to exit.
   - Default PIN is **`1337`** — change it in **Edit prizes → Booth exit PIN**.
   - On the laptop keyboard, **Esc** also exits booth mode.
 

@@ -145,15 +145,20 @@ body.booth #lockCorner{display:flex;position:fixed;top:0;left:0;width:96px;heigh
   opacity:.28;font-size:20px;cursor:pointer;touch-action:manipulation;}
 body.booth #lockCorner:hover{opacity:.6;}
 
-/* visible exit X, only in booth */
+/* visible exit X, only in booth — hold to confirm */
 #exitBtn{display:none;}
-body.booth #exitBtn{display:flex;position:fixed;top:16px;right:16px;z-index:82;
-  width:52px;height:52px;align-items:center;justify-content:center;border-radius:50%;
+body.booth #exitBtn{display:flex;position:fixed;top:16px;right:16px;z-index:82;overflow:hidden;
+  width:56px;height:56px;align-items:center;justify-content:center;border-radius:50%;
   background:rgba(21,24,31,0.72);border:1px solid var(--border);color:var(--text-2);
   font-size:28px;line-height:1;cursor:pointer;touch-action:manipulation;
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:all .15s ease;}
-body.booth #exitBtn:hover{background:rgba(226,72,74,0.22);color:#ff6b6c;border-color:rgba(226,72,74,0.5);}
-body.booth #exitBtn:active{transform:scale(0.94);}
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:color .15s ease, border-color .15s ease;}
+body.booth #exitBtn:hover{color:#ff8f90;border-color:rgba(226,72,74,0.5);}
+#exitBtn span{position:relative;z-index:1;pointer-events:none;}
+#exitBtn::before{content:"";position:absolute;inset:0;border-radius:50%;background:#e2484a;
+  transform:scale(0);opacity:0;z-index:0;}
+#exitBtn.holding{color:#fff;border-color:#e2484a;}
+#exitBtn.holding::before{transform:scale(1);opacity:1;transition:transform .9s linear, opacity .12s ease;}
+body.booth #lockCorner.holding{opacity:.75;}
 
 /* winner takeover */
 #winnerOverlay[hidden]{display:none;}
@@ -266,11 +271,18 @@ details.adv[open] summary::before{content:"\25BE ";}
 #doneBtn:hover,#pinSubmit:hover{filter:brightness(1.06);}
 #doneBtn:active,#pinSubmit:active{transform:scale(0.97);}
 
-#pinInput{width:100%;padding:14px;font-size:26px;letter-spacing:.5em;text-align:center;
-  font-family:ui-monospace,monospace;color:var(--text);-webkit-user-select:text;user-select:text;
-  background:var(--panel-2);border:1px solid var(--border);border-radius:12px;}
-#pinInput:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
+.pin-display{height:56px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);
+  display:flex;align-items:center;justify-content:center;font-size:30px;letter-spacing:.35em;
+  font-family:ui-monospace,monospace;color:var(--text);}
 .pin-err{color:#ff6b6c;font-size:12.5px;margin:8px 0 0;min-height:16px;text-align:center;}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+.pinpad button{height:58px;font-size:22px;font-weight:700;border:1px solid var(--border);border-radius:12px;
+  background:var(--panel-2);color:var(--text);cursor:pointer;touch-action:manipulation;transition:all .12s ease;}
+.pinpad button:hover{background:#232936;border-color:#39404e;}
+.pinpad button:active{transform:scale(0.96);background:#2a303c;}
+.pinpad button.back{color:var(--text-2);font-size:20px;}
+.pinpad button.ok{background:linear-gradient(180deg,var(--orange-soft),var(--orange));color:#1a1205;border:none;}
+.pinpad button.ok:hover{filter:brightness(1.06);}
 
 body.modal-open{overflow:hidden;}
 
@@ -283,7 +295,7 @@ body.modal-open{overflow:hidden;}
 <body>
 <canvas id="confetti"></canvas>
 <div id="lockCorner" role="button" aria-label="Operator menu (hold)" title="Hold to unlock">🔒</div>
-<button id="exitBtn" type="button" aria-label="Exit booth mode" title="Exit booth mode">×</button>
+<button id="exitBtn" type="button" aria-label="Exit booth mode (hold)" title="Hold to exit booth mode"><span>×</span></button>
 
 <div class="page">
   <div class="header">
@@ -371,12 +383,25 @@ body.modal-open{overflow:hidden;}
   <div class="modal-panel pin" role="dialog" aria-modal="true" aria-label="Enter PIN">
     <div class="modal-head"><div><p class="sub">Operator</p><h2>Enter PIN to exit</h2></div></div>
     <div class="modal-body">
-      <input id="pinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" />
+      <div id="pinDisplay" class="pin-display"></div>
       <p class="pin-err" id="pinErr"></p>
+      <div class="pinpad" id="pinpad">
+        <button type="button" data-k="1">1</button>
+        <button type="button" data-k="2">2</button>
+        <button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button>
+        <button type="button" data-k="5">5</button>
+        <button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button>
+        <button type="button" data-k="8">8</button>
+        <button type="button" data-k="9">9</button>
+        <button type="button" data-k="back" class="back" aria-label="Backspace">⌫</button>
+        <button type="button" data-k="0">0</button>
+        <button type="button" data-k="ok" class="ok" aria-label="Unlock">✓</button>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="ghost" id="pinCancel" type="button">Cancel</button>
-      <button id="pinSubmit" type="button">Unlock</button>
     </div>
   </div>
 </div>
@@ -596,7 +621,6 @@ function hideWinner(){winnerOverlay.hidden=true;scheduleAttract();}
 
 /* ---- booth / kiosk mode ---- */
 boothBtn.addEventListener('click',enterBooth);
-document.getElementById('exitBtn').addEventListener('click',exitBooth);
 function enterBooth(){
   boothMode=true;document.body.classList.add('booth');
   requestFs();requestWake();
@@ -628,23 +652,42 @@ function scheduleAttract(){
 function cancelAttract(){if(attractTimer){clearTimeout(attractTimer);attractTimer=null;}wheelWrap.classList.remove('attract');}
 document.addEventListener('pointerdown',function(){if(boothMode){cancelAttract();scheduleAttract();}},true);
 
-/* ---- operator lock: hold corner -> PIN ---- */
-var holdTimer=null;
-lockCorner.addEventListener('pointerdown',function(e){e.preventDefault();holdTimer=setTimeout(openPin,900);});
-['pointerup','pointerleave','pointercancel'].forEach(function(ev){lockCorner.addEventListener(ev,function(){if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}});});
+/* ---- press-and-hold helper (lock corner -> PIN, exit X -> leave booth) ---- */
+function onHold(el,ms,fn){
+  var t=null;
+  el.addEventListener('pointerdown',function(e){e.preventDefault();el.classList.add('holding');t=setTimeout(function(){el.classList.remove('holding');fn();},ms);});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){el.addEventListener(ev,function(){if(t){clearTimeout(t);t=null;}el.classList.remove('holding');});});
+}
+onHold(lockCorner,900,openPin);
+onHold(document.getElementById('exitBtn'),900,exitBooth);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&boothMode&&pinModal.hidden)exitBooth();});
 
 var pinModal=document.getElementById('pinModal');
-var pinInput=document.getElementById('pinInput');
+var pinDisplay=document.getElementById('pinDisplay');
 var pinErr=document.getElementById('pinErr');
-function openPin(){pinModal.hidden=false;pinErr.textContent='';pinInput.value='';setTimeout(function(){pinInput.focus();},60);}
-function closePin(){pinModal.hidden=true;}
+var pinValue='';
+function renderPin(){pinDisplay.textContent=pinValue.replace(/./g,'•');}
+function openPin(){pinValue='';renderPin();pinErr.textContent='';pinModal.hidden=false;}
+function closePin(){pinModal.hidden=true;pinValue='';}
 document.getElementById('pinCancel').addEventListener('click',closePin);
-document.getElementById('pinSubmit').addEventListener('click',trySubmitPin);
-pinInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();trySubmitPin();}});
+document.getElementById('pinpad').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  var k=b.getAttribute('data-k');
+  if(k==='back'){pinValue=pinValue.slice(0,-1);renderPin();}
+  else if(k==='ok'){trySubmitPin();}
+  else if(pinValue.length<8){pinValue+=k;renderPin();}
+});
+document.addEventListener('keydown',function(e){
+  if(pinModal.hidden)return;
+  if(e.key>='0'&&e.key<='9'){if(pinValue.length<8){pinValue+=e.key;renderPin();}}
+  else if(e.key==='Backspace'){pinValue=pinValue.slice(0,-1);renderPin();}
+  else if(e.key==='Enter'){trySubmitPin();}
+  else if(e.key==='Escape'){closePin();}
+});
 function trySubmitPin(){
-  if(pinInput.value===getPin()){closePin();exitBooth();}
-  else{pinErr.textContent='Incorrect PIN';pinInput.value='';pinModal.querySelector('.modal-panel').style.animation='shake .4s';setTimeout(function(){pinModal.querySelector('.modal-panel').style.animation='';},400);}
+  if(pinValue===getPin()){closePin();exitBooth();}
+  else{pinErr.textContent='Incorrect PIN';pinValue='';renderPin();
+    var p=pinModal.querySelector('.modal-panel');p.style.animation='shake .4s';setTimeout(function(){p.style.animation='';},400);}
 }
 
 document.addEventListener('contextmenu',function(e){if(boothMode)e.preventDefault();});
