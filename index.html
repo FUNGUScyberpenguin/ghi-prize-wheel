@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0b0c10" />
+<title>GHI at BlackHat &mdash; Prize Wheel</title>
+<link rel="icon" href="./logo.png" />
+<style>
+:root{
+  --bg:#0b0c10;
+  --bg-2:#111319;
+  --panel:#15181f;
+  --panel-2:#1b1f28;
+  --border:#282d38;
+  --border-soft:#20242e;
+  --text:#f4f5f7;
+  --text-2:#a9b0bd;
+  --text-muted:#6b7280;
+  --orange:#ea7b2c;
+  --orange-soft:#f2a03d;
+  --cyan:#37b6ff;
+  --radius:12px;
+  --shadow:0 10px 40px rgba(0,0,0,0.45);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(234,123,44,0.10), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(55,182,255,0.08), transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
+  background-attachment:fixed;
+  padding:36px 16px 72px;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:
+    linear-gradient(rgba(55,182,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(55,182,255,0.05) 1px, transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(circle at 50% 40%, #000 0%, transparent 78%);
+  -webkit-mask-image:radial-gradient(circle at 50% 40%, #000 0%, transparent 78%);
+}
+.page{max-width:720px;margin:0 auto;position:relative;z-index:1;}
+
+.header{display:flex;align-items:center;gap:18px;margin-bottom:24px;justify-content:center;}
+.header img{
+  width:64px;height:64px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 0 2px rgba(234,123,44,0.5), 0 0 26px rgba(234,123,44,0.35);
+}
+.eyebrow{
+  font-family:ui-monospace,"Cascadia Code","Courier New",monospace;
+  font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 3px;
+}
+.header h1{font-size:26px;font-weight:800;margin:0;letter-spacing:-.01em;}
+.header h1 .ghi{color:var(--orange);}
+
+.card{
+  position:relative;
+  background:linear-gradient(180deg, var(--panel), var(--bg-2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:34px 30px 30px;
+  display:flex;flex-direction:column;align-items:center;
+  box-shadow:var(--shadow);
+}
+.card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:3px;border-radius:18px 18px 0 0;
+  background:linear-gradient(90deg, var(--orange), var(--cyan));opacity:.9;
+}
+
+#wheelWrap{position:relative;width:400px;height:400px;transition:width .25s ease, height .25s ease;
+  filter:drop-shadow(0 14px 30px rgba(0,0,0,0.55));}
+#wheelCanvas{width:400px;height:400px;display:block;transform:rotate(0deg);border-radius:50%;}
+#pointer{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;
+  border-top:28px solid var(--orange);z-index:3;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,0.5)) drop-shadow(0 0 8px rgba(234,123,44,0.55));
+}
+#hub{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:100px;height:100px;border-radius:50%;overflow:hidden;
+  border:3px solid #0b0c10;box-sizing:border-box;z-index:2;background:#000;
+  box-shadow:0 0 0 3px rgba(234,123,44,0.85), 0 0 22px rgba(234,123,44,0.5), 0 3px 10px rgba(0,0,0,0.6);
+  cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;
+}
+#hub:hover{transform:translate(-50%,-50%) scale(1.06);box-shadow:0 0 0 3px var(--orange), 0 0 34px rgba(234,123,44,0.75), 0 3px 12px rgba(0,0,0,0.6);}
+#hub:active{transform:translate(-50%,-50%) scale(0.95);}
+#hub:focus-visible{outline:3px solid var(--cyan);outline-offset:4px;}
+#hub.spinning{cursor:default;}
+#hub.spinning:hover{transform:translate(-50%,-50%);}
+#hub img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+
+.tap-hint{font-family:ui-monospace,"Cascadia Code",monospace;font-size:11px;letter-spacing:.08em;
+  color:var(--text-muted);margin:16px 0 0;text-align:center;text-transform:uppercase;}
+
+.spin-btn{
+  margin-top:18px;padding:15px 44px;font-size:16px;font-weight:700;letter-spacing:.04em;
+  color:#1a1205;border:none;border-radius:999px;cursor:pointer;
+  background:linear-gradient(180deg, var(--orange-soft), var(--orange));
+  box-shadow:0 6px 18px rgba(234,123,44,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;
+}
+.spin-btn:hover{filter:brightness(1.06);box-shadow:0 8px 26px rgba(234,123,44,0.55), inset 0 1px 0 rgba(255,255,255,0.3);}
+.spin-btn:active{transform:scale(0.97);}
+.spin-btn:disabled{opacity:.55;cursor:default;filter:grayscale(.2);box-shadow:none;}
+
+#winnerBox{margin-top:20px;min-height:34px;text-align:center;}
+.winner-pill{
+  display:inline-flex;align-items:center;gap:9px;
+  background:linear-gradient(180deg, rgba(234,123,44,0.18), rgba(234,123,44,0.10));
+  border:1px solid rgba(234,123,44,0.6);
+  color:var(--orange-soft);border-radius:999px;padding:12px 24px;font-size:19px;font-weight:800;
+  box-shadow:0 0 22px rgba(234,123,44,0.28);
+  animation:pop .35s cubic-bezier(.2,1.3,.4,1);
+}
+.winner-pill .who{color:#fff;}
+.winner-note{font-size:13px;color:var(--text-2);margin:0;}
+@keyframes pop{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+.actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;justify-content:center;}
+.btn{
+  font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+  transition:all .15s ease;display:inline-flex;align-items:center;gap:8px;
+}
+.btn:hover{background:#232936;border-color:#39404e;}
+.btn.primary{border-color:rgba(55,182,255,0.5);background:rgba(55,182,255,0.10);color:#bfe3ff;}
+.btn.primary:hover{background:rgba(55,182,255,0.18);}
+.pill-count{font-variant-numeric:tabular-nums;color:var(--text-2);font-size:12px;
+  background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:2px 8px;margin-left:2px;}
+
+.footer{text-align:center;font-size:12px;color:var(--text-muted);margin-top:26px;
+  font-family:ui-monospace,"Cascadia Code",monospace;letter-spacing:.03em;}
+.footer .dot{color:var(--orange);}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;}
+
+/* ---------- MODAL ---------- */
+.modal[hidden]{display:none;}
+.modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(4,5,8,0.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:fade .18s ease;}
+.modal-panel{
+  position:relative;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;
+  background:linear-gradient(180deg, var(--panel), var(--bg-2));
+  border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.6);
+  overflow:hidden;animation:rise .22s cubic-bezier(.2,.9,.3,1);
+}
+.modal-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg, var(--orange), var(--cyan));}
+@keyframes fade{from{opacity:0;}to{opacity:1;}}
+@keyframes rise{from{transform:translateY(16px) scale(.98);opacity:0;}to{transform:none;opacity:1;}}
+
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;}
+.modal-head h2{margin:0;font-size:16px;font-weight:700;}
+.modal-head .sub{font-family:ui-monospace,"Cascadia Code",monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--cyan);margin:0 0 2px;}
+.modal-close{width:34px;height:34px;border:none;border-radius:10px;background:var(--panel-2);
+  color:var(--text-2);font-size:20px;line-height:1;cursor:pointer;transition:all .15s ease;flex-shrink:0;}
+.modal-close:hover{background:#2a303c;color:var(--text);}
+.modal-body{padding:4px 22px 8px;overflow-y:auto;}
+
+.add-row{display:flex;gap:8px;margin-bottom:14px;}
+#addInput{flex:1;padding:12px 13px;font-size:14px;font-family:inherit;color:var(--text);
+  background:var(--panel-2);border:1px solid var(--border);border-radius:10px;}
+#addInput::placeholder{color:var(--text-muted);}
+#addInput:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
+#addBtn{padding:12px 20px;font-size:14px;font-weight:700;color:#1a1205;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(180deg, var(--orange-soft), var(--orange));white-space:nowrap;transition:filter .15s ease, transform .1s ease;}
+#addBtn:hover{filter:brightness(1.06);}
+#addBtn:active{transform:scale(0.97);}
+
+#chipList{display:flex;flex-direction:column;gap:8px;}
+#chipList:empty::after{content:"No prizes yet \2014 add some above.";color:var(--text-muted);
+  font-size:13px;padding:22px 6px;text-align:center;}
+.chip{display:flex;align-items:center;gap:10px;background:var(--panel-2);
+  border:1px solid var(--border-soft);border-radius:10px;padding:8px 8px 8px 12px;}
+.chip .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.chip .name{flex:1;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chip .stepper{display:flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:8px;}
+.chip .stepper button{width:26px;height:26px;border:none;background:transparent;color:var(--text-2);
+  font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}
+.chip .stepper button:hover{background:#2a303c;color:var(--text);}
+.chip .stepper .qty{min-width:22px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--text);}
+.chip .remove{width:28px;height:28px;border:none;background:transparent;color:var(--text-muted);
+  font-size:17px;line-height:1;cursor:pointer;border-radius:8px;flex-shrink:0;}
+.chip .remove:hover{background:rgba(226,72,74,0.16);color:#ff6b6c;}
+
+.toolbar{display:flex;gap:8px;margin:16px 0 12px;flex-wrap:wrap;}
+.toolbar button{font-size:12.5px;padding:8px 14px;border:1px solid var(--border);border-radius:9px;
+  background:var(--panel-2);color:var(--text-2);cursor:pointer;transition:all .15s ease;}
+.toolbar button:hover{background:#232936;color:var(--text);border-color:#39404e;}
+.count-row{font-size:13px;color:var(--text-2);}
+.count-row b{color:var(--text);font-variant-numeric:tabular-nums;}
+
+.checkrow{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:13px;color:var(--text-2);cursor:pointer;user-select:none;}
+.checkrow input{accent-color:var(--orange);width:16px;height:16px;cursor:pointer;}
+
+details.adv{margin-top:14px;border-top:1px solid var(--border-soft);padding-top:12px;}
+details.adv summary{font-size:12.5px;color:var(--text-muted);cursor:pointer;list-style:none;}
+details.adv summary::-webkit-details-marker{display:none;}
+details.adv summary::before{content:"\25B8 ";color:var(--cyan);}
+details.adv[open] summary::before{content:"\25BE ";}
+#itemsText{width:100%;margin-top:10px;min-height:130px;padding:12px;font-size:13px;line-height:1.65;
+  border:1px solid var(--border);border-radius:10px;resize:vertical;
+  font-family:ui-monospace,"Cascadia Code","Courier New",monospace;color:var(--text);background:var(--bg);}
+#itemsText:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,182,255,0.18);}
+.hint{font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.6;}
+
+.modal-foot{padding:14px 22px 20px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;}
+#doneBtn{padding:11px 26px;font-size:14px;font-weight:700;color:#1a1205;border:none;border-radius:999px;cursor:pointer;
+  background:linear-gradient(180deg, var(--orange-soft), var(--orange));transition:filter .15s ease, transform .1s ease;}
+#doneBtn:hover{filter:brightness(1.06);}
+#doneBtn:active{transform:scale(0.97);}
+
+body.modal-open{overflow:hidden;}
+
+@media (max-width:520px){
+  #wheelWrap,#wheelCanvas{width:300px;height:300px;}
+  .card{padding:26px 18px 22px;}
+}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="page">
+  <div class="header">
+    <img src="./logo.png" alt="GHI logo" />
+    <div>
+      <p class="eyebrow">// Spin to win</p>
+      <h1><span class="ghi">GHI</span> at BlackHat</h1>
+    </div>
+  </div>
+
+  <div class="card" id="card">
+    <div id="wheelWrap">
+      <canvas id="wheelCanvas" width="400" height="400"></canvas>
+      <div id="pointer"></div>
+      <div id="hub" tabindex="0" role="button" aria-label="Spin the wheel">
+        <img src="./logo.png" alt="" />
+      </div>
+    </div>
+    <p class="tap-hint">Tap the logo or the button to spin</p>
+    <button id="spinBtn" class="spin-btn">SPIN THE WHEEL</button>
+    <div id="winnerBox"></div>
+
+    <div class="actions">
+      <button id="editBtn" class="btn primary" type="button">✎ Edit prizes <span class="pill-count" id="countPill">0</span></button>
+      <button id="presentToggle" class="btn" type="button">⛶ Enlarge wheel</button>
+    </div>
+  </div>
+
+  <div class="footer">GHI at BlackHat <span class="dot">&bull;</span> runs entirely in your browser <span class="dot">&bull;</span> nothing is uploaded</div>
+</div>
+
+<!-- Prize manager modal -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <div>
+        <p class="sub">Manage the wheel</p>
+        <h2 id="modalTitle">Prizes on the wheel</h2>
+      </div>
+      <button class="modal-close" type="button" data-close aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="add-row">
+        <input id="addInput" type="text" placeholder="Add a prize&hellip;" autocomplete="off" spellcheck="false" />
+        <button id="addBtn" type="button">Add</button>
+      </div>
+      <div id="chipList"></div>
+      <div class="toolbar">
+        <button id="shuffleBtn" type="button">Shuffle</button>
+        <button id="sortBtn" type="button">Sort A&ndash;Z</button>
+        <button id="clearBtn" type="button">Clear all</button>
+        <button id="resetBtn" type="button">Reset defaults</button>
+      </div>
+      <div class="count-row">Total slices: <b id="countLabel">0</b></div>
+      <label class="checkrow"><input type="checkbox" id="removeAfterWin" /> Remove the winner from the wheel after each spin</label>
+      <details class="adv">
+        <summary>Advanced: edit as text</summary>
+        <textarea id="itemsText" spellcheck="false"></textarea>
+        <p class="hint">One prize per line. Adding the same prize more than once (or using the + button) gives it extra slices, so it comes up more often.</p>
+      </details>
+      <p class="hint">Everything is saved in this browser and runs fully offline &mdash; safe to use at the booth with no wifi.</p>
+    </div>
+    <div class="modal-foot">
+      <button id="doneBtn" type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+var canvas=document.getElementById('wheelCanvas');
+var ctx=canvas.getContext('2d');
+var wheelWrap=document.getElementById('wheelWrap');
+var hub=document.getElementById('hub');
+var pointer=document.getElementById('pointer');
+var presentToggle=document.getElementById('presentToggle');
+var card=document.getElementById('card');
+var itemsText=document.getElementById('itemsText');
+var chipList=document.getElementById('chipList');
+var addInput=document.getElementById('addInput');
+var countLabel=document.getElementById('countLabel');
+var countPill=document.getElementById('countPill');
+var spinBtn=document.getElementById('spinBtn');
+var winnerBox=document.getElementById('winnerBox');
+var removeAfterWin=document.getElementById('removeAfterWin');
+var modal=document.getElementById('modal');
+var editBtn=document.getElementById('editBtn');
+
+var NORMAL_SIZE=400;
+var presentMode=false;
+var size=NORMAL_SIZE,cx=size/2,cy=size/2,radius=size/2-10;
+var colors=['#F2A03D','#5FB030','#7C6FE8','#E8484A','#E86A2E','#33A1E8','#E85C88'];
+var currentRotation=0;
+var spinning=false;
+var STORE_KEY='ghi-wheel-items';
+
+var DEFAULTS=[
+  '1 Year Cert Tracker','1 Year Cert Tracker','1 Year Cert Tracker',
+  '1 year DeleteME','1 year DeleteME','1 year DeleteME',
+  '1 month SkillBit','1 month SkillBit','1 month SkillBit',
+  'TCM 20% off coupon','TCM 20% off coupon','TCM 20% off coupon',
+  'Pocket prep','Pocket prep','Pocket prep',
+  'Candy','Candy','Candy',
+  'Sticker','Sticker','GHI pin'
+];
+
+var items=load();
+
+function load(){
+  try{var raw=localStorage.getItem(STORE_KEY);if(raw){var arr=JSON.parse(raw);if(Array.isArray(arr))return arr;}}catch(e){}
+  return DEFAULTS.slice();
+}
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(items));}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function groupItems(){
+  var order=[],map={};
+  for(var i=0;i<items.length;i++){var l=items[i];if(map[l]==null){map[l]=0;order.push(l);}map[l]++;}
+  var out=[];for(var j=0;j<order.length;j++){out.push({label:order[j],count:map[order[j]]});}
+  return out;
+}
+
+function setItems(next, fromTextarea){
+  items=next;save();renderChips();
+  if(!fromTextarea){itemsText.value=items.join('\n');}
+  drawWheel();
+}
+
+function renderChips(){
+  var groups=groupItems();
+  countLabel.textContent=items.length;
+  countPill.textContent=items.length;
+  chipList.innerHTML='';
+  var slice=0;
+  for(var g=0;g<groups.length;g++){
+    var grp=groups[g];
+    var color=colors[slice%colors.length];
+    slice+=grp.count;
+    var chip=document.createElement('div');
+    chip.className='chip';
+    chip.innerHTML=
+      '<span class="swatch" style="background:'+color+'"></span>'+
+      '<span class="name" title="'+esc(grp.label)+'">'+esc(grp.label)+'</span>'+
+      '<span class="stepper">'+
+        '<button type="button" data-act="minus" aria-label="Fewer">−</button>'+
+        '<span class="qty">'+grp.count+'</span>'+
+        '<button type="button" data-act="plus" aria-label="More">+</button>'+
+      '</span>'+
+      '<button type="button" class="remove" data-act="remove" aria-label="Remove">×</button>';
+    (function(label){
+      chip.querySelector('[data-act="plus"]').onclick=function(){addOne(label);};
+      chip.querySelector('[data-act="minus"]').onclick=function(){removeOne(label);};
+      chip.querySelector('[data-act="remove"]').onclick=function(){removeAll(label);};
+    })(grp.label);
+    chipList.appendChild(chip);
+  }
+}
+
+function addOne(label){var next=items.slice();next.push(label);setItems(next,false);}
+function removeOne(label){var next=items.slice();var idx=next.indexOf(label);if(idx>-1)next.splice(idx,1);setItems(next,false);}
+function removeAll(label){var next=items.filter(function(x){return x!==label;});setItems(next,false);}
+
+function drawWheel(){
+  var n=items.length;
+  ctx.clearRect(0,0,size,size);
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius+3,0,Math.PI*2);ctx.fillStyle='#0b0c10';ctx.fill();ctx.restore();
+
+  if(n===0){
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fillStyle='#1b1f28';ctx.fill();
+    ctx.fillStyle='#6b7280';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 15px Arial, sans-serif';
+    ctx.fillText('Add prizes to spin',cx,cy);ctx.restore();drawRing();return;
+  }
+
+  var segAngle=(Math.PI*2)/n;
+  for(var i=0;i<n;i++){
+    var start=-Math.PI/2+i*segAngle;var end=start+segAngle;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,start,end);ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length];ctx.fill();
+    ctx.strokeStyle='rgba(11,12,16,0.85)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();
+    var mid=start+segAngle/2;ctx.translate(cx,cy);ctx.rotate(mid);
+    var label=items[i];
+    var maxChars=Math.max(6,Math.floor(20-n*0.15));
+    if(label.length>maxChars){label=label.slice(0,maxChars-1)+'…';}
+    var fontPx=Math.max(11,Math.round(13*(size/NORMAL_SIZE)));
+    ctx.font='700 '+fontPx+'px Arial, sans-serif';ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,0.45)';
+    ctx.fillStyle='#ffffff';ctx.textBaseline='middle';
+    var flip=mid>Math.PI/2 && mid<Math.PI*1.5;
+    if(flip){ctx.rotate(Math.PI);ctx.textAlign='left';ctx.strokeText(label,-(radius-16),0);ctx.fillText(label,-(radius-16),0);}
+    else{ctx.textAlign='right';ctx.strokeText(label,radius-16,0);ctx.fillText(label,radius-16,0);}
+    ctx.restore();
+  }
+  drawRing();
+}
+function drawRing(){
+  ctx.save();
+  ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.lineWidth=6;ctx.strokeStyle='#ea7b2c';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,radius-3.5,0,Math.PI*2);ctx.lineWidth=1;ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.stroke();
+  ctx.restore();
+}
+
+function computeSize(){
+  if(!presentMode)return Math.min(NORMAL_SIZE, window.innerWidth-72);
+  var available=Math.min(window.innerWidth-64, window.innerHeight-240, 720);
+  return Math.max(380, Math.round(available));
+}
+function applyLayout(){
+  size=computeSize();cx=size/2;cy=size/2;radius=size/2-10;
+  wheelWrap.style.width=size+'px';wheelWrap.style.height=size+'px';
+  canvas.width=size;canvas.height=size;canvas.style.width=size+'px';canvas.style.height=size+'px';
+  var scale=size/NORMAL_SIZE;
+  hub.style.width=Math.round(100*scale)+'px';hub.style.height=Math.round(100*scale)+'px';
+  pointer.style.borderLeftWidth=Math.round(15*scale)+'px';
+  pointer.style.borderRightWidth=Math.round(15*scale)+'px';
+  pointer.style.borderTopWidth=Math.round(28*scale)+'px';
+}
+
+/* ---- modal ---- */
+function openModal(){
+  modal.hidden=false;document.body.classList.add('modal-open');
+  setTimeout(function(){addInput.focus();},60);
+}
+function closeModal(){modal.hidden=true;document.body.classList.remove('modal-open');editBtn.focus();}
+editBtn.addEventListener('click',openModal);
+modal.addEventListener('click',function(e){if(e.target.hasAttribute('data-close'))closeModal();});
+document.getElementById('doneBtn').addEventListener('click',closeModal);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)closeModal();});
+
+/* ---- add / edit ---- */
+addInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();commitAdd();}});
+document.getElementById('addBtn').addEventListener('click',commitAdd);
+function commitAdd(){var v=addInput.value.trim();if(!v)return;addOne(v);addInput.value='';addInput.focus();}
+
+var textareaTimer=null;
+itemsText.addEventListener('input',function(){
+  if(textareaTimer)clearTimeout(textareaTimer);
+  textareaTimer=setTimeout(function(){
+    var parsed=itemsText.value.split('\n').map(function(s){return s.trim();}).filter(function(s){return s.length>0;});
+    setItems(parsed,true);
+  },300);
+});
+document.getElementById('shuffleBtn').addEventListener('click',function(){
+  var next=items.slice();for(var i=next.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=next[i];next[i]=next[j];next[j]=t;}setItems(next,false);
+});
+document.getElementById('sortBtn').addEventListener('click',function(){
+  var next=items.slice();next.sort(function(a,b){return a.localeCompare(b);});setItems(next,false);
+});
+document.getElementById('clearBtn').addEventListener('click',function(){winnerBox.innerHTML='';setItems([],false);});
+document.getElementById('resetBtn').addEventListener('click',function(){winnerBox.innerHTML='';setItems(DEFAULTS.slice(),false);});
+
+/* ---- spin ---- */
+function spinWheel(){
+  if(spinning)return;
+  if(items.length<2){
+    winnerBox.innerHTML='<p class="winner-note">Add at least two prizes to spin.</p>';
+    return;
+  }
+  spinning=true;spinBtn.disabled=true;hub.classList.add('spinning');winnerBox.innerHTML='';
+  var n=items.length;var segAngle=360/n;
+  var extra=360*(5+Math.floor(Math.random()*3))+Math.random()*360;
+  var newRotation=currentRotation+extra;
+  canvas.style.transition='transform 4.2s cubic-bezier(0.12,0.67,0.1,1)';
+  canvas.style.transform='rotate('+newRotation+'deg)';
+  setTimeout(function(){
+    currentRotation=newRotation;
+    var shifted=((360-(currentRotation%360))%360+360)%360;
+    var winIndex=Math.floor(shifted/segAngle)%n;
+    var winner=items[winIndex];
+    winnerBox.innerHTML='<div class="winner-pill">🎉 <span class="who">'+esc(winner)+'</span></div>';
+    burstConfetti();
+    spinning=false;spinBtn.disabled=false;hub.classList.remove('spinning');
+    if(removeAfterWin.checked){setTimeout(function(){removeOne(winner);},450);}
+  },4300);
+}
+spinBtn.addEventListener('click',spinWheel);
+hub.addEventListener('click',spinWheel);
+hub.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();spinWheel();}});
+
+presentToggle.addEventListener('click',function(){
+  presentMode=!presentMode;
+  presentToggle.textContent=presentMode?'⤢ Shrink wheel':'⛶ Enlarge wheel';
+  applyLayout();drawWheel();
+});
+window.addEventListener('resize',function(){sizeConfetti();applyLayout();drawWheel();});
+
+/* ---- confetti ---- */
+var cc=document.getElementById('confetti');
+var cctx=cc.getContext('2d');
+var parts=[],raf=null;
+function sizeConfetti(){var dpr=window.devicePixelRatio||1;cc.width=window.innerWidth*dpr;cc.height=window.innerHeight*dpr;cctx.setTransform(dpr,0,0,dpr,0,0);}
+function burstConfetti(){
+  var W=window.innerWidth;var originX=W/2,originY=window.innerHeight*0.30;
+  for(var i=0;i<150;i++){
+    var a=Math.random()*Math.PI*2;var sp=4+Math.random()*7;
+    parts.push({x:originX+(Math.random()-0.5)*140,y:originY,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,
+      g:0.14+Math.random()*0.1,s:5+Math.random()*6,rot:Math.random()*6.28,vr:(Math.random()-0.5)*0.35,
+      col:colors[Math.floor(Math.random()*colors.length)],life:0,max:120+Math.random()*40});
+  }
+  if(!raf)raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+  for(var i=parts.length-1;i>=0;i--){
+    var p=parts[i];p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life++;
+    var alpha=Math.max(0,1-p.life/p.max);
+    cctx.save();cctx.globalAlpha=alpha;cctx.translate(p.x,p.y);cctx.rotate(p.rot);
+    cctx.fillStyle=p.col;cctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6);cctx.restore();
+    if(p.life>=p.max||p.y>window.innerHeight+40)parts.splice(i,1);
+  }
+  if(parts.length){raf=requestAnimationFrame(tick);}else{cctx.clearRect(0,0,window.innerWidth,window.innerHeight);raf=null;}
+}
+
+/* ---- init ---- */
+sizeConfetti();
+itemsText.value=items.join('\n');
+applyLayout();
+renderChips();
+drawWheel();
+})();
+</script>
+</body>
+</html>
