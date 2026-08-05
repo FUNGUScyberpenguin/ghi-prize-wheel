@@ -48,4 +48,19 @@ python -m http.server 8000
 ## Files
 
 - `index.html` — the whole app (HTML + CSS + JS)
-- `logo.png` — GHI logo (header, spin hub, favicon)
+- `logo.png` — GHI logo (header, favicon)
+- `donate-qr.svg` — donation QR code shown in the wheel hub
+
+## Donation QR code
+
+The hub in the middle of the wheel is a QR code pointing at
+https://hcb.hackclub.com/donations/start/gingerhacker so guests can scan it
+while they wait for a spin. It's a static file, so it still works with no
+network at the booth.
+
+To point it somewhere else, regenerate `donate-qr.svg`:
+
+```bash
+pip install segno
+python -c "import segno; segno.make('https://YOUR-URL-HERE', error='m').save('donate-qr.svg', scale=10, border=2, dark='#0b0c10', light='#ffffff', omitsize=True)"
+```
